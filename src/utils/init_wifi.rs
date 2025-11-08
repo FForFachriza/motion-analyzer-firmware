@@ -1,20 +1,17 @@
 use anyhow::Context;
 use esp_idf_svc::{
     eventloop::{EspEventLoop, System},
-    hal::{delay::FreeRtos, prelude::Peripherals},
+    hal::{delay::FreeRtos, modem::Modem},
     nvs::{EspNvsPartition, NvsDefault},
     wifi::{BlockingWifi, EspWifi},
 };
 
 pub fn init_wifi(
-    peripherals: Peripherals,
+    modem: Modem,
     sys_loop: EspEventLoop<System>,
     nvs: EspNvsPartition<NvsDefault>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut wifi = BlockingWifi::wrap(
-        EspWifi::new(peripherals.modem, sys_loop.clone(), Some(nvs))?,
-        sys_loop,
-    )?;
+    let mut wifi = BlockingWifi::wrap(EspWifi::new(modem, sys_loop.clone(), Some(nvs))?, sys_loop)?;
 
     let ap_config = esp_idf_svc::wifi::Configuration::AccessPoint(
         esp_idf_svc::wifi::AccessPointConfiguration {
@@ -33,6 +30,7 @@ pub fn init_wifi(
 
     FreeRtos::delay_ms(500);
 
+    // Todo: Might make this shit as an env / toml
     log::info!("Access Point started!");
     log::info!("SSID: FForFachriza@rintohsaka");
     log::info!("Security: Open (no password)");
